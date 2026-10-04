@@ -1,4 +1,5 @@
 #cloud-config
+# rev 2 (2026-10-04): dock pinned to Chrome only via dconf system default
 # Ubuntu 26.04.1 Desktop - unattended install (autoinstall)
 # Consumed via kernel cmdline: autoinstall ds=nocloud-net;s=https://raw.githubusercontent.com/ericitguys/ubuntu-autoinstall/main/
 autoinstall:
