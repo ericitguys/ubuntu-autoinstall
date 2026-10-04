@@ -35,5 +35,12 @@ autoinstall:
     - 'curtin in-target -- runuser -u local_user -- dbus-run-session -- gio set /home/local_user/Desktop/medevent-login.desktop metadata::trusted true || true'
     # --- BROWSER env for anything not using xdg ---
     - 'grep -q "^BROWSER=" /target/etc/environment || echo "BROWSER=/usr/bin/google-chrome-stable" >> /target/etc/environment'
+    # --- Dock: only Chrome pinned (dconf system default, applies on first login) ---
+    - |
+      mkdir -p /target/etc/dconf/profile /target/etc/dconf/db/local.d
+      printf "user-db:user\nsystem-db:local\n" > /target/etc/dconf/profile/user
+      printf "[org/gnome/shell]\nfavorite-apps=['google-chrome.desktop']\n" > /target/etc/dconf/db/local.d/00-favorites
+    - 'curtin in-target -- bash -c "(dpkg -s dconf-cli >/dev/null 2>&1 || apt-get install -y dconf-cli) ; true"'
+    - 'curtin in-target -- dconf update || true'
   # Machine powers off when done - remove the USB stick, then power on
   shutdown: poweroff

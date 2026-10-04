@@ -57,6 +57,9 @@ URL is only for the kernel-cmdline method above, where cloud-init appends
 - **Desktop shortcut "MedEvent Login"** → `https://emile.medeventsolutions.com/auth/login`
   (`~/Desktop/medevent-login.desktop`, made executable and pre-trusted via
   `metadata::trusted` so GNOME doesn't show the untrusted-launcher prompt)
+- **Dock pinned to Chrome only** (dconf system default:
+  `org.gnome.shell favorite-apps = ['google-chrome.desktop']` — the app grid
+  keeps all apps, only the dock pins change)
 
 ## Notes
 
