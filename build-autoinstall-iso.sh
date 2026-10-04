@@ -36,7 +36,7 @@ if [ ! -f "$ISO" ]; then
   curl -fL --retry 3 -C - -o "$ISO" "$ISO_URL"
 fi
 curl -fsS -o "$BUILD/SHA256SUMS" "$SHA_URL"
-(cd "$BUILD" && grep " $(basename "$ISO")$" SHA256SUMS | sha256sum -c -)
+(cd "$BUILD" && grep -E " [ *]$(basename "$ISO")$" SHA256SUMS | sha256sum -c -)
 
 # --- bundled Chrome deb (used by the ISO seed; user-data falls back to network) ---
 mkdir -p "$ROOT/assets"
@@ -44,9 +44,10 @@ mkdir -p "$ROOT/assets"
   curl -fL --retry 3 -C - -o "$ROOT/assets/google-chrome-stable_current_amd64.deb" "$CHROME_URL"
 
 # --- extract the ISO ---
-rm -rf "$WORK"
+[ -d "$WORK" ] && { chmod -R u+rwX "$WORK" 2>/dev/null || true; rm -rf "$WORK"; }
 mkdir -p "$WORK"
 "$XR" -osirrox on -indev "$ISO" -extract / "$WORK" >/dev/null 2>&1
+chmod -R u+rwX "$WORK"
 
 # --- seed ---
 mkdir -p "$WORK/autoinstall/debs"
@@ -105,8 +106,9 @@ PY
 
 # --- rebuild ---
 OPTS="$("$XR" -indev "$ISO" -report_el_torito as_mkisofs | tail -n +2)"
-echo "xorriso opts: $OPTS"
-eval "$XR -as mkisofs $OPTS -o \"$OUT\" \"$WORK\""
+JOINED="$(printf '%s\n' "$OPTS" | tr '\n' ' ')"
+echo "xorriso opts: $JOINED"
+eval "$XR -as mkisofs $JOINED -o \"$OUT\" \"$WORK\""
 
 # --- verify ---
 rm -rf /tmp/seedcheck /tmp/grubcheck
