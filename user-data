@@ -1,0 +1,39 @@
+#cloud-config
+# Ubuntu 26.04.1 Desktop - unattended install (autoinstall)
+# Consumed via kernel cmdline: autoinstall ds=nocloud-net;s=https://raw.githubusercontent.com/ericitguys/ubuntu-autoinstall/main/
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  identity:
+    hostname: ubuntu
+    username: local_user
+    realname: Local User
+    # SHA-512 crypt hash of the install password (regenerate: openssl passwd -6 'newpass')
+    password: "$6$RI6fnhENeh4NfY/Q$QgyFk2zGDLT8pU2.5MlS3BUFI3XT3Q0.p0rsuJWsvKXE7nXwKUKcjW37y2BiwP.zGLCv6DoxO6fr7bvWiFRIf1"
+  # Erases the entire (largest) disk and uses it directly
+  storage:
+    layout:
+      name: direct
+  late-commands:
+    # --- Google Chrome (stable) ---
+    - 'curtin in-target -- bash -c "(apt-get update -qq || true) && (curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || wget -qO /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb)"'
+    - 'curtin in-target -- apt-get install -y /tmp/chrome.deb'
+    - 'curtin in-target -- rm -f /tmp/chrome.deb'
+    # --- Chrome as system default browser ---
+    - 'curtin in-target -- update-alternatives --set x-www-browser /usr/bin/google-chrome-stable || true'
+    - 'curtin in-target -- update-alternatives --set gnome-www-browser /usr/bin/google-chrome-stable || true'
+    # --- Per-user home dirs ---
+    - 'mkdir -p /target/home/local_user/.config /target/home/local_user/Desktop'
+    # --- GNOME default browser (what GNOME uses when a link is opened) ---
+    - 'printf "[Default Applications]\ntext/html=google-chrome.desktop\napplication/xhtml+xml=google-chrome.desktop\nx-scheme-handler/http=google-chrome.desktop\nx-scheme-handler/https=google-chrome.desktop\nx-scheme-handler/about=google-chrome.desktop\nx-scheme-handler/unknown=google-chrome.desktop\n" > /target/home/local_user/.config/mimeapps.list'
+    # --- Desktop shortcut for the MedEvent login portal ---
+    - 'printf "[Desktop Entry]\nVersion=1.0\nType=Application\nName=MedEvent Login\nComment=MedEvent Solutions portal\nExec=/usr/bin/google-chrome-stable --no-first-run https://emile.medeventsolutions.com/auth/login\nTryExec=/usr/bin/google-chrome-stable\nIcon=google-chrome\nTerminal=false\nCategories=Network;\n" > /target/home/local_user/Desktop/medevent-login.desktop'
+    - 'chmod 755 /target/home/local_user/Desktop /target/home/local_user/.config && chmod 644 /target/home/local_user/.config/mimeapps.list && chmod 755 /target/home/local_user/Desktop/medevent-login.desktop && chown -R 1000:1000 /target/home/local_user/.config /target/home/local_user/Desktop'
+    # --- Pre-trust the desktop launcher so the icon is clickable without a confirmation prompt ---
+    - 'curtin in-target -- runuser -u local_user -- dbus-run-session -- gio set /home/local_user/Desktop/medevent-login.desktop metadata::trusted true || true'
+    # --- BROWSER env for anything not using xdg ---
+    - 'grep -q "^BROWSER=" /target/etc/environment || echo "BROWSER=/usr/bin/google-chrome-stable" >> /target/etc/environment'
+  # Machine powers off when done - remove the USB stick, then power on
+  shutdown: poweroff
