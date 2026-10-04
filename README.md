@@ -61,6 +61,28 @@ URL is only for the kernel-cmdline method above, where cloud-init appends
   `org.gnome.shell favorite-apps = ['google-chrome.desktop']` — the app grid
   keeps all apps, only the dock pins change)
 
+## Build a zero-keystroke autoinstall USB (optional)
+
+```
+./build-autoinstall-iso.sh
+```
+
+Produces `ubuntu-26.04.1-desktop-autoinstall-amd64.iso`: stock desktop ISO plus
+the seed at `/cdrom/autoinstall` (user-data, meta-data and the bundled Chrome
+deb) and a first GRUB entry — **"Ubuntu 26.04.1 Desktop - AUTOINSTALL (MedEvent)"**
+— that boots straight into the unattended install (10 s timeout; the original
+manual-install entries stay below it). No URL typing, no GitHub reachability at
+install time; Chrome is read from the ISO itself with dl.google.com as fallback.
+Flash it with balenaEtcher/Rufus, or:
+
+```
+dd if=ubuntu-26.04.1-desktop-autoinstall-amd64.iso of=/dev/sdX bs=4M conv=fsync status=progress
+```
+
+Requires `xorriso` — plain `sudo apt-get install xorriso`, or without root the
+script picks up a deb-unpacked copy placed in `tools/xorriso/` (see the script's
+xorriso detection block).
+
 ## Notes
 
 - Repo is **public** so the desktops can fetch the seed without credentials. Only a
