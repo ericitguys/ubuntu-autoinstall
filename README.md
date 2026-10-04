@@ -26,6 +26,21 @@ standard Ubuntu ISO and pull `user-data` + `meta-data` from this repo over the n
 
 The installer needs network (DHCP) to reach GitHub and dl.google.com.
 
+## If the installer asks for an autoinstall URL on screen (GUI)
+
+The desktop installer's automated-installation screen wants the URL of the
+**file**, not the folder:
+
+```
+https://raw.githubusercontent.com/ericitguys/ubuntu-autoinstall/main/user-data
+```
+
+Pasting the **folder** URL (`.../main/`) into a field that fetches the literal
+URL returns GitHub's `404: Not Found`, which the installer reports as
+`Malformed autoinstall in 'version or interactive-sections' section`. The folder
+URL is only for the kernel-cmdline method above, where cloud-init appends
+`user-data` / `meta-data` itself. The file URL works in both places.
+
 ## What it configures
 
 - **Storage:** erases the entire (largest) disk — `storage.layout.name: direct`
